@@ -10,6 +10,7 @@
 #include<iostream>
 #include<thread>
 #include<functional>
+#include<future>
 #include "utils.h"
 
 template<typename T>
@@ -166,6 +167,15 @@ void findAdjoint(Matrix<T> & matrix, Matrix<T> & adj)
 }
 
 template<typename T>
+T findAdjointAt(Matrix<T> & matrix, size_t i, size_t j) {
+    int sign = 1;
+    Matrix<T> temp = Matrix<T>(matrix.rows, matrix.cols);
+    getCofactor(matrix, temp, i, j, matrix.rows);
+    sign = ((i + j) % 2 == 0) ? 1 : -1;
+    return sign * (findDeterminant<T>(temp, matrix.rows - 1));
+}
+
+template<typename T>
 bool inverse(Matrix<T> & matrix, Matrix<T> & inverse)
 {
     if (matrix.cols != matrix.rows) {
@@ -248,6 +258,49 @@ bool inverseParallel(Matrix<T> & matrix, Matrix<T> & inverse)
 }
 
 template<typename T>
+bool inverseAsync(Matrix<T> & matrix, Matrix<T> & inverse)
+{
+    if (matrix.cols != matrix.rows) {
+        std::cout << "Singular matrix, can't find its inverse" << std::endl;
+        return false;
+    }
+
+    T det = findDeterminant<T>(matrix, matrix.rows);
+    if (abs(det) <= 0.0000000001) {
+        std::cout << "Singular matrix, can't find its inverse" << std::endl;
+        return false;
+    }
+
+    Matrix<T> adj = Matrix<T>(matrix.rows, matrix.cols);
+
+    for (size_t i = 0; i < matrix.rows; i++)
+    {
+        std::vector<std::future<T>> temp_res;
+        for (size_t j = 0; j < matrix.cols; j++)
+        {
+            temp_res.push_back(std::async(std::launch::async, [](Matrix<T> matrix, size_t i, size_t j) {
+                int sign = 1;
+                Matrix<T> temp = Matrix<T>(matrix.rows, matrix.cols);
+                getCofactor(matrix, temp, i, j, matrix.rows);
+                sign = ((i + j) % 2 == 0) ? 1 : -1;
+                return sign * (findDeterminant<T>(temp, matrix.rows - 1));
+                }, matrix, i, j));
+        }
+        for (size_t j = 0; j < matrix.cols; j++)
+        {
+            adj.content[j][i] = temp_res[j].get();
+        }
+        temp_res.clear();
+    }
+
+    for (int i = 0; i < matrix.rows; ++i)
+        for (int j = 0; j < matrix.cols; ++j)
+            inverse.setElement(adj.content[i][j] / T(det), i , j);
+
+    return true;
+}
+
+template<typename T>
 Matrix<T> operator! (Matrix<T> & matrix) {
     if (matrix.cols != matrix.rows) throw std::exception("Matrix must be a square");
     Matrix<T> temp = Matrix<T>(matrix.rows, matrix.cols);
@@ -270,6 +323,8 @@ private:
     friend void findAdjoint<T>(Matrix<T> & matrix, Matrix<T> & adj);
     friend bool inverse<T>(Matrix<T> & matrix, Matrix<T> & inverse);
     friend bool inverseParallel<T>(Matrix<T> & matrix, Matrix<T> & inverse);
+    friend T findAdjointAt<T>(Matrix<T> & matrix, size_t i, size_t j);
+    friend bool inverseAsync<T>(Matrix<T> & matrix, Matrix<T> & inverse);
 
     friend Matrix<T> operator* <T> (const Matrix<T> & lhs, const Matrix<T> & rhs);
     friend Matrix<T> operator+ <T> (const Matrix<T> & lhs, const Matrix<T> & rhs);
@@ -347,6 +402,17 @@ public:
             std::cout << "\n";
         }
         std::cout << std::endl;
+    }
+
+    void writeMatrix(const std::string & path) {
+        std::ofstream out(path);
+        for (size_t i = 0; i < rows; ++i) {
+            for (size_t j = 0; j < cols; ++j) {
+                out << content[i][j] << "\t";
+            }
+            out << "\n";
+        }
+        out << std::endl;
     }
 
     size_t getCols() { return cols; }

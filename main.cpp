@@ -5,19 +5,11 @@
 using namespace std::chrono;
 
 int main() {
-    Matrix<double> A = Matrix<double>(&std::cin);
-    Matrix<double> B = Matrix<double>(&std::cin);
+    auto A = Matrix<double>(&std::cin);
+    auto T = Matrix<double>(3, 3);
 
-    (A - B).print();
-
-    Matrix<int> E = createIdentityMatrix<int>(4, 4);
-    E.print();
-    std::cout << (E == 1) << std::endl;
-    std::cout << (Matrix<int>(3, 3) == 0) << std::endl;
-
-    (!A).print();
-    (A * !A).print();
-    std::cout << (A * !A == 1) << std::endl;
-
+    inverseAsync<double>(A, T);
+    T.print();
+    (A * T).print();
     return 0;
 }
