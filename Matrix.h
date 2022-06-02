@@ -311,6 +311,28 @@ Matrix<T> operator! (Matrix<T> & matrix) {
 }
 
 template<typename T>
+Matrix<T> operator* (Matrix<T> & lhs, int rhs) {
+    auto temp = Matrix<T>(lhs.rows, lhs.cols);
+    for (int i = 0; i < temp.rows; ++i) {
+        for (int j = 0; j < temp.cols; ++j) {
+            temp.content[i][j] = lhs.content[i][j] * rhs;
+        }
+    }
+    return temp;
+}
+
+template<typename T>
+Matrix<T> operator* (int lhs, Matrix<T> & rhs) {
+    auto temp = Matrix<T>(rhs.rows, rhs.cols);
+    for (int i = 0; i < temp.rows; ++i) {
+        for (int j = 0; j < temp.cols; ++j) {
+            temp.content[i][j] = rhs.content[i][j] * lhs;
+        }
+    }
+    return temp;
+}
+
+template<typename T>
 class Matrix {
 private:
     size_t cols = 0;
@@ -327,6 +349,8 @@ private:
     friend bool inverseAsync<T>(Matrix<T> & matrix, Matrix<T> & inverse);
 
     friend Matrix<T> operator* <T> (const Matrix<T> & lhs, const Matrix<T> & rhs);
+    friend Matrix<T> operator* <T> (Matrix<T> & lhs, int rhs);
+    friend Matrix<T> operator* <T> (int lhs, Matrix<T> & rhs);
     friend Matrix<T> operator+ <T> (const Matrix<T> & lhs, const Matrix<T> & rhs);
     friend Matrix<T> operator- <T> (const Matrix<T> & lhs, const Matrix<T> & rhs);
     friend Matrix<T> operator! <T> (Matrix<T> & matrix);
@@ -392,6 +416,26 @@ public:
         this->cols = cols;
         content = std::vector<std::vector<T>>(rows);
         for (size_t i = 0; i < rows; ++i) { content[i] = std::vector<T>(cols); }
+    }
+
+    Matrix(const Matrix& other) {
+        rows = other.rows;
+        cols = other.cols;
+        content = std::vector<std::vector<T>>(rows);
+        for (size_t i = 0; i < rows; ++i) content[i] = other.content[i];
+    }
+
+    Matrix(Matrix&& other) noexcept {
+        rows = other.rows;
+        cols = other.cols;
+        content = std::move(other.content);
+        //for (size_t i = 0; i < rows; ++i) content[i] = std::move(other.content[i]);
+        other.rows = 0;
+        other.cols = 0;
+    }
+
+    Matrix() {
+        content = std::vector<std::vector<T>>();
     }
 
     void print() {
