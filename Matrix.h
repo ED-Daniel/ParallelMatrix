@@ -11,6 +11,7 @@
 #include<thread>
 #include<functional>
 #include<future>
+#include<initializer_list>
 #include "utils.h"
 
 template<typename T>
@@ -432,6 +433,30 @@ public:
         //for (size_t i = 0; i < rows; ++i) content[i] = std::move(other.content[i]);
         other.rows = 0;
         other.cols = 0;
+    }
+
+    Matrix(std::initializer_list<std::tuple<std::tuple<size_t, size_t>, T>> elements) {
+        content = std::vector<std::vector<T>>();
+
+        for (auto element : elements) {
+            std::tuple<size_t, size_t> pos;
+            T value;
+            std::tie(pos, value) = element;
+
+            size_t row;
+            size_t col;
+            std::tie(row, col) = pos;
+
+            if (row >= content.size()) {
+                content.resize(row + 1);
+                for (size_t i = 0; i < content.size(); i++) content[i].resize(content[0].size());
+            }
+            if (col >= content[0].size()) for (size_t i = 0; i < content.size(); i++) content[i].resize(col + 1);
+            content[row][col] = value;
+        }
+
+        rows = content.size();
+        cols = content[0].size();
     }
 
     Matrix() {

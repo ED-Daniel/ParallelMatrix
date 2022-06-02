@@ -14,4 +14,7 @@ int main() {
     B.print();
     C.print();
     test.print();
+
+    auto test2 = Matrix<double>({{{0, 0}, 1}, {{0, 1}, 2}, {{1, 0}, 3}, {{7, 8}, 324}});
+    test2.print();
 }
