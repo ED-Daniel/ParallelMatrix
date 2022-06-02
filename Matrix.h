@@ -341,6 +341,8 @@ private:
 
     std::vector<std::vector<T>> content;
 
+    size_t thread_count = 4;
+
     friend void getCofactor<T>(Matrix<T> & matrix, Matrix<T> & temp, size_t exRow, size_t exCol, size_t n);
     friend T findDeterminant<T>(Matrix<T> & matrix, size_t n);
     friend void findAdjoint<T>(Matrix<T> & matrix, Matrix<T> & adj);
@@ -498,6 +500,8 @@ public:
         }
     }
 
+    void setThreads(size_t count) { thread_count = count; }
+
     T getElement(size_t row, size_t col) { return content[row][cols]; }
 
     void setElement(T element, size_t row, size_t col) { content[row][col] = element; }
@@ -507,7 +511,7 @@ public:
 
         Matrix<T> product = Matrix<T>(rows, other.cols);
 
-        const size_t threadsCount = 4;
+        const size_t threadsCount = thread_count;
         std::vector<std::thread> threads = std::vector<std::thread>();
 
         for (size_t i = 0; i < threadsCount; ++i) {
@@ -543,11 +547,11 @@ public:
         return product;
     }
 
-    Matrix<T> & operator= (const Matrix<T> & other) {
-        other.cols = cols;
-        other.rows = rows;
-        other.content = std::copy(content.begin(), content.end());
-    }
+//    Matrix<T> & operator= (const Matrix<T> & other) {
+//        other.cols = cols;
+//        other.rows = rows;
+//        other.content = std::copy(content.begin(), content.end());
+//    }
 };
 
 
